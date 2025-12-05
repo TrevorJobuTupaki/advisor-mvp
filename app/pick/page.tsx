@@ -406,11 +406,11 @@ export default function PlanningPage() {
               補充說明（選填）
             </label>
             <textarea
-              className="w-full min-w-[280px] md:min-w-[350px] rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 min-h-[120px] resize-y"
-              value={inputNote}
-              onChange={(e) => setInputNote(e.target.value)}
-              placeholder="例如：是否可接受槓桿、目前已有持股類型、產業偏好、避險需求…"
-            ></textarea>
+              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 min-h-[140px] resize-y"
+                value={inputNote}
+                onChange={(e) => setInputNote(e.target.value)}
+                placeholder="例如：是否可接受槓桿、目前已有持股類型、產業偏好、避險需求…"
+            />
 
           </div>
 
