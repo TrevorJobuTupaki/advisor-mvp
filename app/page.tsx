@@ -1,15 +1,19 @@
+// app/page.tsx
 export default function Home() {
   return (
-    <main className="p-10 text-white max-w-3xl mx-auto leading-relaxed">
+    <div className="text-white max-w-3xl mx-auto leading-relaxed">
       <h1 className="text-4xl font-bold mb-6">投顧 MVP — 使用說明</h1>
 
       <p className="text-lg text-neutral-300 mb-8">
-        這是一個先做出來「試水溫」的投資小工具，目前專注在兩件事：
-        「投資規劃」與「持股追蹤」。下面是現在版本能做到的事，以及建議的使用方式。
+        這是一個投資小工具，目前專注在兩件事：
+        「投資規劃」與「持股追蹤」。下面是使用方式。
       </p>
 
+      {/* 下面內容照你原本那份（我已經幫你保留） */}
       <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-3">1️⃣ 投資規劃（左側選單：投資規劃）</h2>
+        <h2 className="text-2xl font-semibold mb-3">
+          1️⃣ 投資規劃（左側選單：投資規劃）
+        </h2>
         <p className="text-neutral-300 mb-2">
           由 GPT 協助產生「美股投資規劃建議」，會根據你的：
         </p>
@@ -20,15 +24,18 @@ export default function Home() {
           <li>初始投入金額、是否每月定期加碼</li>
         </ul>
         <p className="text-neutral-400 text-sm">
-          ➤ 填完表單後按下「產生投資規劃」，系統會用 GPT 產生一段文字說明，包含大致可行的資產配置方向，
-          並且可能附上幾檔 ETF / 個股作為範例標的，你可以一鍵加入追蹤清單。
+          ➤ 填完表單後按下「產生投資規劃」，系統會用 GPT 產生一段文字說明，
+          包含大致可行的資產配置方向，並且可能附上幾檔 ETF / 個股作為範例標的，
+          你可以一鍵加入追蹤清單。
         </p>
       </section>
 
       <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-3">2️⃣ 持股追蹤（左側選單：追蹤）</h2>
+        <h2 className="text-2xl font-semibold mb-3">
+          2️⃣ 持股追蹤（左側選單：追蹤）
+        </h2>
         <p className="text-neutral-300 mb-2">
-          在這裡可以管理你實際「已買進」的股票，並查看總成本、損益與均價。
+          在這裡可以新增你實際「已買進」的股票，並查看總成本、損益與均價。
         </p>
         <ul className="list-disc list-inside text-neutral-300 text-sm space-y-1 mb-2">
           <li>可以從「投資規劃」頁面推薦標的直接加入追蹤</li>
@@ -54,8 +61,9 @@ export default function Home() {
       </section>
 
       <p className="text-neutral-500 text-sm">
-        建議從左側選單依序點選「投資規劃 → 追蹤」實際操作一次，看這樣的流程是否符合你的使用習慣。
+        建議從左側選單依序點選「投資規劃 → 追蹤」實際操作一次，
+        看這樣的流程是否符合你的使用習慣。
       </p>
-    </main>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 /* ===== 全站強制黑底白字 ===== */
-html, body {
+html,
+body {
   background-color: #000 !important;
   color: #fff !important;
 }
@@ -9,23 +10,9 @@ html, body {
 }
 
 /* 讓 input 文字也固定為白色 */
-input, select, textarea {
-  background-color: #111 !important;
-  color: #fff !important;
-  border-color: #333 !important;
-}
-/* ===== 全站強制黑底白字 ===== */
-html, body {
-  background-color: #000 !important;
-  color: #fff !important;
-}
-
-* {
-  color: inherit !important;
-}
-
-/* 讓 input 文字也固定為白色 */
-input, select, textarea {
+input,
+select,
+textarea {
   background-color: #111 !important;
   color: #fff !important;
   border-color: #333 !important;
