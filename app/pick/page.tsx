@@ -51,7 +51,7 @@ const RISK_OPTIONS = [
   { value: "aggressive", label: "積極：承受大波動以追求更高報酬" },
 ];
 
-// 追蹤資料結構：一檔股票 = 多筆交易
+// ===== 追蹤資料結構 =====
 type Trade = {
   id: string;
   date: string; // YYYY-MM-DD
@@ -150,6 +150,8 @@ export default function PlanningPage() {
   const [tradeShares, setTradeShares] = useState<string>("");
 
   const goalOptions = GOAL_BY_HORIZON[horizon];
+  const horizonDesc =
+    HORIZON_OPTIONS.find((h) => h.value === horizon)?.desc ?? "";
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -164,9 +166,7 @@ export default function PlanningPage() {
     }
     if (addEveryMonth === "yes" && !monthlyAmount.trim()) {
       setLoading(false);
-      setErrorMsg(
-        "請輸入每月預計追加投資金額（美元），或改選擇不固定加碼。"
-      );
+      setErrorMsg("請輸入每月預計追加投資金額（美元），或改選擇不固定加碼。");
       return;
     }
 
@@ -248,52 +248,63 @@ export default function PlanningPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 space-y-8">
-      {/* 標題區 */}
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold">投資規劃（美股）</h1>
-        <p className="text-sm text-neutral-300">
-          選擇投資期間、報酬目標、風險承受度與投入金額，系統會請 GPT 產生客製化投資規劃，
-          並推薦可追蹤的美股標的。
-        </p>
+      {/* 頂部標題 + 小提示，走 TradingView 風格 */}
+      <header className="space-y-3 border-b border-neutral-800 pb-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">
+              投資規劃 <span className="text-sm text-neutral-400">（美股）</span>
+            </h1>
+            <p className="mt-1 text-sm text-neutral-300">
+              輸入你的投報週期、目標報酬與風險承受度，系統會請 GPT 產生客製化投資規劃，
+              並推薦可追蹤標的。
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-neutral-400">
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              Demo / 本地儲存
+            </span>
+          </div>
+        </div>
       </header>
 
-      {/* 主內容：左表單 / 右 GPT 文本 */}
+      {/* 主內容：左設定、右規劃文字 */}
       <div className="grid gap-6 lg:grid-cols-[1.1fr,1fr]">
-        {/* 左側：設定表單 */}
-        <section className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-6 space-y-6">
-          {/* 投資期間 */}
+        {/* 左側：設定表單（卡片） */}
+        <section className="rounded-xl border border-neutral-800 bg-gradient-to-b from-neutral-900/90 to-black/80 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.65)] space-y-6">
+          {/* 投報週期 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">投資期間</label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              投報週期
+            </label>
+            <select
+              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
+              value={horizon}
+              onChange={(e) => {
+                const v = e.target.value as Horizon;
+                setHorizon(v);
+                setGoal(GOAL_BY_HORIZON[v][0].value);
+              }}
+            >
               {HORIZON_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => {
-                    setHorizon(opt.value);
-                    setGoal(GOAL_BY_HORIZON[opt.value][0].value);
-                  }}
-                  className={
-                    "text-left rounded-lg border px-3 py-2 text-sm bg-neutral-900 " +
-                    (horizon === opt.value
-                      ? "border-emerald-500 bg-neutral-800"
-                      : "border-neutral-700 hover:bg-neutral-800")
-                  }
-                >
-                  <div className="font-semibold">{opt.label}</div>
-                  <div className="mt-1 text-xs text-neutral-400">
-                    {opt.desc}
-                  </div>
-                </button>
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
               ))}
-            </div>
+            </select>
+            {horizonDesc && (
+              <p className="text-xs text-neutral-400">{horizonDesc}</p>
+            )}
           </div>
 
           {/* 投報目標 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">投報目標</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              投報目標
+            </label>
             <select
-              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
             >
@@ -307,9 +318,11 @@ export default function PlanningPage() {
 
           {/* 風險承受度 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">風險承受度</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              風險承受度
+            </label>
             <select
-              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
               value={risk}
               onChange={(e) => setRisk(e.target.value)}
             >
@@ -323,23 +336,25 @@ export default function PlanningPage() {
 
           {/* 初始投資金額 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">初始投資金額（美元）</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              初始投資金額（美元）
+            </label>
             <input
               type="number"
               min="0"
-              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
               value={initialAmount}
               onChange={(e) => setInitialAmount(e.target.value)}
               placeholder="例如：5000"
             />
             <p className="text-xs text-neutral-500">
-              建議填寫大約金額即可，用來協助評估風險與合理預期。
+              寫大約金額即可，主要用來估算風險與合理報酬範圍。
             </p>
           </div>
 
           {/* 是否每月持續投入 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">
+            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
               後續是否每月持續投入？
             </label>
             <div className="flex flex-col gap-2 text-sm md:flex-row">
@@ -367,19 +382,19 @@ export default function PlanningPage() {
 
             {addEveryMonth === "yes" && (
               <div className="space-y-2 mt-2">
-                <label className="text-sm font-medium">
+                <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
                   每月預計追加投資金額（美元）
                 </label>
                 <input
                   type="number"
                   min="0"
-                  className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
                   value={monthlyAmount}
                   onChange={(e) => setMonthlyAmount(e.target.value)}
                   placeholder="例如：500"
                 />
                 <p className="text-xs text-neutral-500">
-                  GPT 會依照「單筆 + 每月定期投入」一起評估可行性與資產成長路徑。
+                  GPT 會同時考慮「單筆 + 每月定期投入」，模擬資產成長路徑。
                 </p>
               </div>
             )}
@@ -387,16 +402,18 @@ export default function PlanningPage() {
 
           {/* 補充說明 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">補充說明（選填）</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              補充說明（選填）
+            </label>
             <textarea
-              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-neutral-500"
+              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
               value={inputNote}
               onChange={(e) => setInputNote(e.target.value)}
-              placeholder="例如：是否可接受槓桿、目前已有持股類型、對某些產業特別偏好或避險需求…"
+              placeholder="例如：是否可接受槓桿、目前已有持股類型、產業偏好、避險需求…"
             />
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-2 border-t border-neutral-800/70 mt-2">
             <button
               type="button"
               onClick={handleGenerate}
@@ -409,13 +426,15 @@ export default function PlanningPage() {
         </section>
 
         {/* 右側：GPT 規劃文字 */}
-        <section className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-6 space-y-4">
-          <h2 className="text-lg font-semibold">GPT 投資規劃建議</h2>
-          <p className="text-sm text-neutral-300">
-            送出表單後，這裡會顯示 GPT 產生的說明文字與資產配置建議。
+        <section className="rounded-xl border border-neutral-800 bg-gradient-to-b from-neutral-900/80 to-black/80 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.6)] space-y-4">
+          <h2 className="text-sm font-semibold tracking-wide text-neutral-300 uppercase">
+            GPT 投資規劃建議
+          </h2>
+          <p className="text-xs text-neutral-400">
+            送出表單後，這裡會顯示 GPT 產生的說明文字與資產配置建議。可對照下方「建議追蹤標的」實際操作。
           </p>
 
-          <div className="mt-4 h-[260px] overflow-y-auto rounded-lg border border-neutral-800 bg-black/40 p-3 text-sm whitespace-pre-wrap">
+          <div className="mt-2 h-[260px] overflow-y-auto rounded-lg border border-neutral-800 bg-black/60 p-3 text-sm whitespace-pre-wrap">
             {plan ? (
               plan
             ) : (
@@ -429,27 +448,29 @@ export default function PlanningPage() {
 
       {/* 錯誤訊息 */}
       {errorMsg && (
-        <div className="rounded-lg border border-red-500 bg-red-950/30 px-3 py-2 text-sm text-red-300">
+        <div className="rounded-lg border border-red-500 bg-red-950/40 px-3 py-2 text-sm text-red-200">
           {errorMsg}
         </div>
       )}
 
       {/* 建議追蹤標的 */}
       {tickers.length > 0 && (
-        <section className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-6 space-y-3">
-          <h3 className="text-lg font-semibold">建議追蹤的美股標的</h3>
+        <section className="rounded-xl border border-neutral-800 bg-neutral-900/80 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.55)] space-y-3">
+          <h3 className="text-sm font-semibold tracking-wide text-neutral-300 uppercase">
+            建議追蹤的美股標的
+          </h3>
           <p className="text-xs text-neutral-400">
-            點「加入追蹤」會要求輸入買進日期、價格與股數，並寫入追蹤頁面的持股紀錄。
+            點「加入追蹤」會要求輸入買進日期、價格與股數，並寫入「持股追蹤」頁面的紀錄。
           </p>
 
           <div className="flex flex-col gap-3">
             {tickers.map((t) => (
               <div
                 key={t.symbol}
-                className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border border-neutral-800 rounded-lg px-3 py-2 bg-black/30"
+                className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border border-neutral-800 rounded-lg px-3 py-2 bg-black/40"
               >
                 <div>
-                  <div className="font-mono font-semibold">
+                  <div className="font-mono text-sm font-semibold">
                     {t.symbol.toUpperCase()}
                   </div>
                   {t.reason && (
@@ -462,12 +483,12 @@ export default function PlanningPage() {
                 <div className="flex-1" />
 
                 {activeSymbol === t.symbol ? (
-                  <div className="flex flex-col md:flex-row gap-2 items-center">
+                  <div className="flex flex-col md:flex-row gap-2 items-center text-xs">
                     <input
                       type="date"
                       value={tradeDate}
                       onChange={(e) => setTradeDate(e.target.value)}
-                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs"
+                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1"
                     />
                     <input
                       type="number"
@@ -476,7 +497,7 @@ export default function PlanningPage() {
                       placeholder="買入價格"
                       value={tradePrice}
                       onChange={(e) => setTradePrice(e.target.value)}
-                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs w-28 text-right"
+                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 w-24 text-right"
                     />
                     <input
                       type="number"
@@ -485,19 +506,19 @@ export default function PlanningPage() {
                       placeholder="股數"
                       value={tradeShares}
                       onChange={(e) => setTradeShares(e.target.value)}
-                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs w-24 text-right"
+                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 w-20 text-right"
                     />
                     <button
                       type="button"
                       onClick={handleConfirmAddTrade}
-                      className="px-3 py-1 text-xs rounded-md bg-emerald-500 text-black hover:bg-emerald-400"
+                      className="px-3 py-1 rounded-md bg-emerald-500 text-black hover:bg-emerald-400"
                     >
                       確認加入追蹤
                     </button>
                     <button
                       type="button"
                       onClick={() => setActiveSymbol(null)}
-                      className="px-2 py-1 text-xs rounded-md border border-neutral-600 text-neutral-300 hover:bg-neutral-800"
+                      className="px-2 py-1 rounded-md border border-neutral-600 text-neutral-300 hover:bg-neutral-800"
                     >
                       取消
                     </button>
