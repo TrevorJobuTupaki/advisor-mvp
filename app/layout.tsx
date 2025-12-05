@@ -1,40 +1,36 @@
 // app/layout.tsx
-import type { Metadata } from "next";
-import Link from "next/link";
+import type { ReactNode } from "react";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "投顧 MVP",
-  description: "簡易版投資規劃與追蹤工具（測試用）",
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="zh-Hant">
-      <body className="min-h-screen bg-black text-white">
-        <div className="flex min-h-screen bg-black text-white">
-          {/* 左側選單 */}
-          <aside className="w-56 bg-neutral-950 border-r border-neutral-800 p-4">
-            <h1 className="text-lg font-bold mb-4">投顧 MVP</h1>
-            <nav className="flex flex-col gap-2 text-sm">
-              <Link href="/" className="hover:text-emerald-400">
-                使用說明
-              </Link>
-              <Link href="/pick" className="hover:text-emerald-400">
+      <body className="bg-slate-950 text-slate-100">
+        <div className="min-h-screen flex">
+          {/* 左側功能欄 */}
+          <aside className="w-60 shrink-0 border-r border-slate-800 bg-slate-900/70">
+            <div className="p-4 font-bold text-lg">投顧 MVP</div>
+            <nav className="flex flex-col gap-2 px-4 pb-4 text-sm">
+              <a href="/" className="py-2 px-3 rounded-md hover:bg-slate-800">
+                首頁 / 使用說明
+              </a>
+              <a
+                href="/plan"
+                className="py-2 px-3 rounded-md hover:bg-slate-800"
+              >
                 投資規劃
-              </Link>
-              <Link href="/track" className="hover:text-emerald-400">
+              </a>
+              <a
+                href="/tracking"
+                className="py-2 px-3 rounded-md hover:bg-slate-800"
+              >
                 追蹤
-              </Link>
+              </a>
             </nav>
           </aside>
 
           {/* 右側主內容 */}
-          <main className="flex-1 bg-black text-white p-6 overflow-auto">
+          <main className="flex-1 overflow-y-auto">
             {children}
           </main>
         </div>
