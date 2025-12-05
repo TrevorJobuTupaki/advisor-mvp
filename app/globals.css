@@ -1,19 +1,17 @@
-/* ===== 全站強制黑底白字 ===== */
+/* 全站黑底 + 預設白字，但允許子元素自己改顏色 */
 html,
 body {
-  background-color: #000 !important;
-  color: #fff !important;
+  background-color: #000;
+  color: #fff;
+  padding: 0;
+  margin: 0;
 }
 
-* {
-  color: inherit !important;
-}
-
-/* 讓 input 文字也固定為白色 */
+/* 讓 input/選單在深色主題下清楚可讀 */
 input,
 select,
 textarea {
-  background-color: #111 !important;
-  color: #fff !important;
-  border-color: #333 !important;
+  background-color: #111;
+  color: #fff;
+  border-color: #333;
 }

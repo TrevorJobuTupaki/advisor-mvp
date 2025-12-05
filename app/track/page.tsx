@@ -137,7 +137,6 @@ export default function TrackPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "取得報價失敗");
 
-        // 假設 /api/quote 回傳 { quotes: { [symbol]: number|null } }
         setQuotes(data.quotes || {});
       } catch (e) {
         console.error(e);
@@ -321,34 +320,35 @@ export default function TrackPage() {
     n == null || !Number.isFinite(n) ? "-" : n.toFixed(digits);
 
   return (
-    <div className="max-w-5xl flex flex-col gap-4">
-      <div>
-        <h2 className="text-2xl font-semibold">追蹤清單</h2>
-        <p className="mt-1 text-sm text-neutral-400">
+    <div className="max-w-6xl mx-auto px-4 space-y-8">
+      {/* 標題區 */}
+      <header className="space-y-2">
+        <h1 className="text-3xl font-bold">持股追蹤</h1>
+        <p className="text-sm text-neutral-300">
           這裡只放「已實際買入」的持股，資料存在你的瀏覽器（localStorage），伺服器不會保存。
         </p>
-      </div>
+      </header>
 
-      {/* 整體損益 */}
+      {/* 摘要卡片 */}
       {positions.length > 0 && (
-        <div className="flex flex-wrap gap-4 text-sm">
-          <div>
-            總成本：
-            <span className="font-semibold">
-              {fmt(totalSummary.totalCost, 2)} 美元
-            </span>
+        <section className="grid gap-4 md:grid-cols-3 text-sm">
+          <div className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-4">
+            <div className="text-xs text-neutral-400">總成本（USD）</div>
+            <div className="mt-1 text-xl font-semibold">
+              {fmt(totalSummary.totalCost, 2)}
+            </div>
           </div>
-          <div>
-            目前市值：
-            <span className="font-semibold">
-              {fmt(totalSummary.marketValue, 2)} 美元
-            </span>
+          <div className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-4">
+            <div className="text-xs text-neutral-400">目前市值（USD）</div>
+            <div className="mt-1 text-xl font-semibold">
+              {fmt(totalSummary.marketValue, 2)}
+            </div>
           </div>
-          <div>
-            總損益：
-            <span
+          <div className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-4">
+            <div className="text-xs text-neutral-400">總損益</div>
+            <div
               className={
-                "font-semibold " +
+                "mt-1 text-xl font-semibold " +
                 (totalSummary.pnl > 0
                   ? "text-emerald-400"
                   : totalSummary.pnl < 0
@@ -357,17 +357,19 @@ export default function TrackPage() {
               }
             >
               {fmt(totalSummary.pnl, 2)} 美元（{fmt(totalPnLPct, 2)}%）
-            </span>
+            </div>
+            {loadingQuotes && (
+              <div className="mt-1 text-[11px] text-neutral-500">
+                更新報價中…
+              </div>
+            )}
           </div>
-          {loadingQuotes && (
-            <div className="text-xs text-neutral-500">更新報價中…</div>
-          )}
-        </div>
+        </section>
       )}
 
       {/* 新增持股表單 */}
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-sm">
-        <div className="font-semibold mb-2">新增持股</div>
+      <section className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-4 text-sm space-y-3">
+        <div className="font-semibold">新增持股</div>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
           <div>
             <label className="block text-xs text-neutral-400 mb-1">
@@ -377,7 +379,7 @@ export default function TrackPage() {
               value={newSymbol}
               onChange={(e) => setNewSymbol(e.target.value)}
               placeholder="例如：AAPL"
-              className="w-full bg-black border border-neutral-700 rounded px-2 py-1 text-xs"
+              className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs"
             />
           </div>
           <div>
@@ -388,7 +390,7 @@ export default function TrackPage() {
               type="date"
               value={newDate}
               onChange={(e) => setNewDate(e.target.value)}
-              className="w-full bg-black border border-neutral-700 rounded px-2 py-1 text-xs"
+              className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs"
             />
           </div>
           <div>
@@ -401,7 +403,7 @@ export default function TrackPage() {
               step="0.01"
               value={newPrice}
               onChange={(e) => setNewPrice(e.target.value)}
-              className="w-full bg-black border border-neutral-700 rounded px-2 py-1 text-xs"
+              className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs"
             />
           </div>
           <div>
@@ -414,7 +416,7 @@ export default function TrackPage() {
               step="0.0001"
               value={newShares}
               onChange={(e) => setNewShares(e.target.value)}
-              className="w-full bg-black border border-neutral-700 rounded px-2 py-1 text-xs"
+              className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs"
             />
           </div>
           <div className="flex md:justify-end">
@@ -427,22 +429,40 @@ export default function TrackPage() {
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* 持股總覽 + 編輯明細 */}
-      <div className="rounded-xl bg-neutral-900 border border-neutral-800 overflow-x-auto">
+      <section className="rounded-xl border border-neutral-800 bg-neutral-900/70 overflow-x-auto">
         <table className="w-full text-sm min-w-[900px]">
-          <thead className="bg-neutral-950/60">
+          <thead className="bg-neutral-950/80">
             <tr>
-              <th className="px-3 py-2 text-left">代號</th>
-              <th className="px-3 py-2 text-left">最早買進日</th>
-              <th className="px-3 py-2 text-right">均價（美元）</th>
-              <th className="px-3 py-2 text-right">總股數</th>
-              <th className="px-3 py-2 text-right">總成本（美元）</th>
-              <th className="px-3 py-2 text-right">現價</th>
-              <th className="px-3 py-2 text-right">損益（美元）</th>
-              <th className="px-3 py-2 text-right">損益（%）</th>
-              <th className="px-3 py-2 text-right">操作</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-300">
+                代號
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-300">
+                最早買進日
+              </th>
+              <th className="px-3 py-2 text-right text-xs font-semibold text-neutral-300">
+                均價
+              </th>
+              <th className="px-3 py-2 text-right text-xs font-semibold text-neutral-300">
+                總股數
+              </th>
+              <th className="px-3 py-2 text-right text-xs font-semibold text-neutral-300">
+                總成本
+              </th>
+              <th className="px-3 py-2 text-right text-xs font-semibold text-neutral-300">
+                現價
+              </th>
+              <th className="px-3 py-2 text-right text-xs font-semibold text-neutral-300">
+                損益
+              </th>
+              <th className="px-3 py-2 text-right text-xs font-semibold text-neutral-300">
+                損益（%）
+              </th>
+              <th className="px-3 py-2 text-right text-xs font-semibold text-neutral-300">
+                操作
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -450,19 +470,26 @@ export default function TrackPage() {
               <tr>
                 <td
                   colSpan={9}
-                  className="px-4 py-6 text-center text-neutral-500"
+                  className="px-4 py-6 text-center text-neutral-500 text-sm"
                 >
                   目前尚未新增任何持股，可在「投資規劃」頁加入追蹤，或在上方表單新增。
                 </td>
               </tr>
             ) : (
-              positions.map((p) => {
+              positions.map((p, idx) => {
                 const price = quotes[p.symbol] ?? null;
                 const stats = computeStats(p, price);
 
                 return (
                   <Fragment key={p.symbol}>
-                    <tr className="border-t border-neutral-800 hover:bg-neutral-900">
+                    <tr
+                      className={
+                        "border-t border-neutral-800 " +
+                        (idx % 2 === 0
+                          ? "bg-black/20"
+                          : "bg-black/5 hover:bg-black/20")
+                      }
+                    >
                       <td className="px-3 py-2 font-mono">{p.symbol}</td>
                       <td className="px-3 py-2">
                         {stats.earliestDate || "-"}
@@ -530,9 +557,7 @@ export default function TrackPage() {
                           }}
                           className="px-3 py-1 text-xs rounded-md border border-neutral-500 text-neutral-200 hover:bg-neutral-700/40"
                         >
-                          {expandedSymbol === p.symbol
-                            ? "收合明細"
-                            : "編輯明細"}
+                          {expandedSymbol === p.symbol ? "收合明細" : "編輯明細"}
                         </button>
                         <button
                           type="button"
@@ -545,7 +570,7 @@ export default function TrackPage() {
                     </tr>
 
                     {expandedSymbol === p.symbol && (
-                      <tr className="bg-neutral-950/40 border-t border-neutral-800">
+                      <tr className="bg-neutral-950/60 border-t border-neutral-800">
                         <td colSpan={9} className="px-4 py-3">
                           <div className="text-xs text-neutral-400 mb-2">
                             交易明細（所有買入紀錄）：
@@ -589,7 +614,7 @@ export default function TrackPage() {
                                             e.target.value
                                           )
                                         }
-                                        className="bg-black border border-neutral-700 rounded px-2 py-1 text-[11px]"
+                                        className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px]"
                                       />
                                     </td>
                                     <td className="px-2 py-1 text-right">
@@ -606,7 +631,7 @@ export default function TrackPage() {
                                             e.target.value
                                           )
                                         }
-                                        className="bg-black border border-neutral-700 rounded px-2 py-1 text-[11px] w-24 text-right"
+                                        className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] w-24 text-right"
                                       />
                                     </td>
                                     <td className="px-2 py-1 text-right">
@@ -623,7 +648,7 @@ export default function TrackPage() {
                                             e.target.value
                                           )
                                         }
-                                        className="bg-black border border-neutral-700 rounded px-2 py-1 text-[11px] w-24 text-right"
+                                        className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] w-24 text-right"
                                       />
                                     </td>
                                     <td className="px-2 py-1 text-right">
@@ -652,7 +677,7 @@ export default function TrackPage() {
                                       onChange={(e) =>
                                         setDetailDate(e.target.value)
                                       }
-                                      className="bg-black border border-neutral-700 rounded px-2 py-1 text-[11px]"
+                                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px]"
                                     />
                                   </td>
                                   <td className="px-2 py-2 text-right">
@@ -665,7 +690,7 @@ export default function TrackPage() {
                                         setDetailPrice(e.target.value)
                                       }
                                       placeholder="價格"
-                                      className="bg-black border border-neutral-700 rounded px-2 py-1 text-[11px] w-24 text-right"
+                                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] w-24 text-right"
                                     />
                                   </td>
                                   <td className="px-2 py-2 text-right">
@@ -678,7 +703,7 @@ export default function TrackPage() {
                                         setDetailShares(e.target.value)
                                       }
                                       placeholder="股數"
-                                      className="bg-black border border-neutral-700 rounded px-2 py-1 text-[11px] w-24 text-right"
+                                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] w-24 text-right"
                                     />
                                   </td>
                                   <td className="px-2 py-2" />
@@ -706,7 +731,7 @@ export default function TrackPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </section>
     </div>
   );
 }

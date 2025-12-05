@@ -157,7 +157,6 @@ export default function PlanningPage() {
     setPlan("");
     setTickers([]);
 
-    // 簡單檢查欄位
     if (!initialAmount.trim()) {
       setLoading(false);
       setErrorMsg("請輸入初始投資金額（美元）。");
@@ -165,7 +164,9 @@ export default function PlanningPage() {
     }
     if (addEveryMonth === "yes" && !monthlyAmount.trim()) {
       setLoading(false);
-      setErrorMsg("請輸入每月預計追加投資金額（美元），或改選擇不固定加碼。");
+      setErrorMsg(
+        "請輸入每月預計追加投資金額（美元），或改選擇不固定加碼。"
+      );
       return;
     }
 
@@ -246,157 +247,184 @@ export default function PlanningPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl">
-      <div>
-        <h2 className="text-2xl font-semibold">投資規劃（美股）</h2>
-        <p className="mt-1 text-sm text-neutral-400">
-          選擇投資期間、報酬目標、風險承受度與投入金額，系統會請 GPT 產生客製化投資規劃，並推薦可追蹤的美股標的。
+    <div className="max-w-6xl mx-auto px-4 space-y-8">
+      {/* 標題區 */}
+      <header className="space-y-2">
+        <h1 className="text-3xl font-bold">投資規劃（美股）</h1>
+        <p className="text-sm text-neutral-300">
+          選擇投資期間、報酬目標、風險承受度與投入金額，系統會請 GPT 產生客製化投資規劃，
+          並推薦可追蹤的美股標的。
         </p>
-      </div>
+      </header>
 
-      {/* 設定區 */}
-      <div className="rounded-xl bg-neutral-900 p-4 flex flex-col gap-4">
-        {/* 投資期間 */}
-        <div>
-          <label className="text-sm font-medium">投資期間</label>
-          <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
-            {HORIZON_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => {
-                  setHorizon(opt.value);
-                  setGoal(GOAL_BY_HORIZON[opt.value][0].value);
-                }}
-                className={
-                  "text-left rounded-lg border px-3 py-2 text-sm " +
-                  (horizon === opt.value
-                    ? "border-emerald-500 bg-neutral-800"
-                    : "border-neutral-700 hover:bg-neutral-800")
-                }
-              >
-                <div className="font-semibold">{opt.label}</div>
-                <div className="mt-1 text-xs text-neutral-400">{opt.desc}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 投報目標 */}
-        <div>
-          <label className="text-sm font-medium">投報目標</label>
-          <select
-            className="mt-2 w-full rounded-md bg-black px-3 py-2 text-sm border border-neutral-700"
-            value={goal}
-            onChange={(e) => setGoal(e.target.value)}
-          >
-            {goalOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* 風險承受度 */}
-        <div>
-          <label className="text-sm font-medium">風險承受度</label>
-          <select
-            className="mt-2 w-full rounded-md bg-black px-3 py-2 text-sm border border-neutral-700"
-            value={risk}
-            onChange={(e) => setRisk(e.target.value)}
-          >
-            {RISK_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* 初始投資金額 */}
-        <div>
-          <label className="text-sm font-medium">初始投資金額（美元）</label>
-          <input
-            type="number"
-            min="0"
-            className="mt-2 w-full rounded-md bg-black px-3 py-2 text-sm border border-neutral-700"
-            value={initialAmount}
-            onChange={(e) => setInitialAmount(e.target.value)}
-            placeholder="例如：5000"
-          />
-          <p className="mt-1 text-xs text-neutral-500">
-            建議填寫大約金額即可，用來協助評估風險與合理預期。
-          </p>
-        </div>
-
-        {/* 是否每月持續投入 */}
-        <div>
-          <label className="text-sm font-medium">後續是否每月持續投入？</label>
-          <div className="mt-2 flex gap-4 text-sm">
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                className="accent-emerald-500"
-                value="no"
-                checked={addEveryMonth === "no"}
-                onChange={() => setAddEveryMonth("no")}
-              />
-              不一定／暫時不固定加碼
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                className="accent-emerald-500"
-                value="yes"
-                checked={addEveryMonth === "yes"}
-                onChange={() => setAddEveryMonth("yes")}
-              />
-              是，每月固定投入
-            </label>
-          </div>
-
-          {addEveryMonth === "yes" && (
-            <div className="mt-3">
-              <label className="text-sm font-medium">
-                每月預計追加投資金額（美元）
-              </label>
-              <input
-                type="number"
-                min="0"
-                className="mt-2 w-full rounded-md bg-black px-3 py-2 text-sm border border-neutral-700"
-                value={monthlyAmount}
-                onChange={(e) => setMonthlyAmount(e.target.value)}
-                placeholder="例如：500"
-              />
-              <p className="mt-1 text-xs text-neutral-500">
-                GPT 會依照「單筆 + 每月定期投入」一起評估可行性與資產成長路徑。
-              </p>
+      {/* 主內容：左表單 / 右 GPT 文本 */}
+      <div className="grid gap-6 lg:grid-cols-[1.1fr,1fr]">
+        {/* 左側：設定表單 */}
+        <section className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-6 space-y-6">
+          {/* 投資期間 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">投資期間</label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              {HORIZON_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    setHorizon(opt.value);
+                    setGoal(GOAL_BY_HORIZON[opt.value][0].value);
+                  }}
+                  className={
+                    "text-left rounded-lg border px-3 py-2 text-sm bg-neutral-900 " +
+                    (horizon === opt.value
+                      ? "border-emerald-500 bg-neutral-800"
+                      : "border-neutral-700 hover:bg-neutral-800")
+                  }
+                >
+                  <div className="font-semibold">{opt.label}</div>
+                  <div className="mt-1 text-xs text-neutral-400">
+                    {opt.desc}
+                  </div>
+                </button>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* 補充說明 */}
-        <div>
-          <label className="text-sm font-medium">補充說明（選填）</label>
-          <textarea
-            className="mt-2 w-full rounded-md bg-black px-3 py-2 text-sm border border-neutral-700 min-h-[80px]"
-            value={inputNote}
-            onChange={(e) => setInputNote(e.target.value)}
-            placeholder="例如：是否可接受槓桿、目前已有持股類型、對某些產業特別偏好或避險需求…"
-          />
-        </div>
+          {/* 投報目標 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">投報目標</label>
+            <select
+              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+            >
+              {goalOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={handleGenerate}
-            disabled={loading}
-            className="rounded-md px-4 py-2 text-sm font-medium bg-emerald-500 text-black hover:bg-emerald-400 disabled:opacity-60"
-          >
-            {loading ? "產生規劃中…" : "產生投資規劃"}
-          </button>
-        </div>
+          {/* 風險承受度 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">風險承受度</label>
+            <select
+              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+              value={risk}
+              onChange={(e) => setRisk(e.target.value)}
+            >
+              {RISK_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 初始投資金額 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">初始投資金額（美元）</label>
+            <input
+              type="number"
+              min="0"
+              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+              value={initialAmount}
+              onChange={(e) => setInitialAmount(e.target.value)}
+              placeholder="例如：5000"
+            />
+            <p className="text-xs text-neutral-500">
+              建議填寫大約金額即可，用來協助評估風險與合理預期。
+            </p>
+          </div>
+
+          {/* 是否每月持續投入 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              後續是否每月持續投入？
+            </label>
+            <div className="flex flex-col gap-2 text-sm md:flex-row">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  className="accent-emerald-500"
+                  value="no"
+                  checked={addEveryMonth === "no"}
+                  onChange={() => setAddEveryMonth("no")}
+                />
+                不一定／暫時不固定加碼
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  className="accent-emerald-500"
+                  value="yes"
+                  checked={addEveryMonth === "yes"}
+                  onChange={() => setAddEveryMonth("yes")}
+                />
+                是，每月固定投入
+              </label>
+            </div>
+
+            {addEveryMonth === "yes" && (
+              <div className="space-y-2 mt-2">
+                <label className="text-sm font-medium">
+                  每月預計追加投資金額（美元）
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  value={monthlyAmount}
+                  onChange={(e) => setMonthlyAmount(e.target.value)}
+                  placeholder="例如：500"
+                />
+                <p className="text-xs text-neutral-500">
+                  GPT 會依照「單筆 + 每月定期投入」一起評估可行性與資產成長路徑。
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* 補充說明 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">補充說明（選填）</label>
+            <textarea
+              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm border border-neutral-700 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-neutral-500"
+              value={inputNote}
+              onChange={(e) => setInputNote(e.target.value)}
+              placeholder="例如：是否可接受槓桿、目前已有持股類型、對某些產業特別偏好或避險需求…"
+            />
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={loading}
+              className="rounded-md px-4 py-2 text-sm font-semibold bg-emerald-500 text-black hover:bg-emerald-400 disabled:opacity-60"
+            >
+              {loading ? "產生規劃中…" : "產生投資規劃"}
+            </button>
+          </div>
+        </section>
+
+        {/* 右側：GPT 規劃文字 */}
+        <section className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-6 space-y-4">
+          <h2 className="text-lg font-semibold">GPT 投資規劃建議</h2>
+          <p className="text-sm text-neutral-300">
+            送出表單後，這裡會顯示 GPT 產生的說明文字與資產配置建議。
+          </p>
+
+          <div className="mt-4 h-[260px] overflow-y-auto rounded-lg border border-neutral-800 bg-black/40 p-3 text-sm whitespace-pre-wrap">
+            {plan ? (
+              plan
+            ) : (
+              <span className="text-neutral-500">
+                尚未產生投資規劃，請先在左側填寫條件並送出表單。
+              </span>
+            )}
+          </div>
+        </section>
       </div>
 
       {/* 錯誤訊息 */}
@@ -406,29 +434,19 @@ export default function PlanningPage() {
         </div>
       )}
 
-      {/* GPT 投資規劃文字 */}
-      {plan && (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-          <h3 className="text-lg font-semibold mb-2">GPT 投資規劃建議</h3>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-100">
-            {plan}
-          </p>
-        </div>
-      )}
-
       {/* 建議追蹤標的 */}
       {tickers.length > 0 && (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 flex flex-col gap-3">
+        <section className="rounded-xl border border-neutral-800 bg-neutral-900/70 p-6 space-y-3">
           <h3 className="text-lg font-semibold">建議追蹤的美股標的</h3>
-          <p className="text-xs text-neutral-400 mb-1">
-            點「加入追蹤」時會要求輸入買進日期、價格與股數，並直接寫入追蹤頁面的持股紀錄。
+          <p className="text-xs text-neutral-400">
+            點「加入追蹤」會要求輸入買進日期、價格與股數，並寫入追蹤頁面的持股紀錄。
           </p>
 
           <div className="flex flex-col gap-3">
             {tickers.map((t) => (
               <div
                 key={t.symbol}
-                className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border border-neutral-800 rounded-lg px-3 py-2"
+                className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border border-neutral-800 rounded-lg px-3 py-2 bg-black/30"
               >
                 <div>
                   <div className="font-mono font-semibold">
@@ -443,14 +461,13 @@ export default function PlanningPage() {
 
                 <div className="flex-1" />
 
-                {/* 加入追蹤 / 輸入持股資料 */}
                 {activeSymbol === t.symbol ? (
                   <div className="flex flex-col md:flex-row gap-2 items-center">
                     <input
                       type="date"
                       value={tradeDate}
                       onChange={(e) => setTradeDate(e.target.value)}
-                      className="bg-black border border-neutral-700 rounded px-2 py-1 text-xs"
+                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs"
                     />
                     <input
                       type="number"
@@ -459,7 +476,7 @@ export default function PlanningPage() {
                       placeholder="買入價格"
                       value={tradePrice}
                       onChange={(e) => setTradePrice(e.target.value)}
-                      className="bg-black border border-neutral-700 rounded px-2 py-1 text-xs w-28"
+                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs w-28 text-right"
                     />
                     <input
                       type="number"
@@ -468,7 +485,7 @@ export default function PlanningPage() {
                       placeholder="股數"
                       value={tradeShares}
                       onChange={(e) => setTradeShares(e.target.value)}
-                      className="bg-black border border-neutral-700 rounded px-2 py-1 text-xs w-24"
+                      className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs w-24 text-right"
                     />
                     <button
                       type="button"
@@ -497,7 +514,7 @@ export default function PlanningPage() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );
