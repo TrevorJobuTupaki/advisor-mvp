@@ -10,6 +10,14 @@ type GoalOption = { value: string; label: string };
 type Trade = { id: string; date: string; price: number; shares: number };
 type PlanTicker = { symbol: string; reason: string };
 
+type PlanSections = {
+  market_view?: string;
+  strategy?: string;
+  allocation?: string;
+  entry_exit?: string;
+  risk?: string;
+};
+
 /* ===========================
    選項
 =========================== */
@@ -46,19 +54,22 @@ const RISK_OPTIONS = [
 /* ===========================
    LocalStorage Keys
 =========================== */
-const PLAN_KEY = "investment_plan";
+const PLAN_JSON_KEY = "investment_plan_json";
 const TICKER_KEY = "investment_tickers";
+const INDUSTRY_KEY = "investment_industry";
 
 /* ===========================
    LocalStorage Helpers
 =========================== */
-function loadSavedPlan() {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem(PLAN_KEY) || "";
+function loadSavedPlanJSON(): PlanSections | null {
+  try {
+    return JSON.parse(localStorage.getItem(PLAN_JSON_KEY) || "null");
+  } catch {
+    return null;
+  }
 }
 
 function loadSavedTickers(): PlanTicker[] {
-  if (typeof window === "undefined") return [];
   try {
     return JSON.parse(localStorage.getItem(TICKER_KEY) || "[]");
   } catch {
@@ -66,12 +77,20 @@ function loadSavedTickers(): PlanTicker[] {
   }
 }
 
-function savePlan(plan: string) {
-  localStorage.setItem(PLAN_KEY, plan);
+function loadSavedIndustry() {
+  return localStorage.getItem(INDUSTRY_KEY) || "";
+}
+
+function savePlanJSON(plan: any) {
+  localStorage.setItem(PLAN_JSON_KEY, JSON.stringify(plan));
 }
 
 function saveTickers(tickers: PlanTicker[]) {
   localStorage.setItem(TICKER_KEY, JSON.stringify(tickers));
+}
+
+function saveIndustry(industry: string) {
+  localStorage.setItem(INDUSTRY_KEY, industry);
 }
 
 /* ===========================
@@ -108,34 +127,47 @@ export default function PlanningPage() {
   const [addEveryMonth, setAddEveryMonth] = useState<"no" | "yes">("no");
   const [monthlyAmount, setMonthlyAmount] = useState("");
 
-  /* GPT 回傳區 */
-  const [plan, setPlan] = useState("");
+  const [industryPreference, setIndustryPreference] = useState("");
+
+  const [planSections, setPlanSections] = useState<PlanSections | null>(null);
   const [tickers, setTickers] = useState<PlanTicker[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  /* 加入追蹤用 */
   const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
-  const [tradeDate, setTradeDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [tradeDate, setTradeDate] = useState(() =>
+    new Date().toISOString().slice(0, 10)
+  );
   const [tradePrice, setTradePrice] = useState("");
   const [tradeShares, setTradeShares] = useState("");
+
+  /* ⭐ 多選展開狀態（可同時展開多個） */
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({
+    market_view: true,
+    strategy: false,
+    allocation: false,
+    entry_exit: false,
+    risk: false,
+  });
 
   const horizonDesc = HORIZON_OPTIONS.find((h) => h.value === horizon)?.desc;
   const goalOptions = GOAL_BY_HORIZON[horizon];
 
   /* ===========================
-     1) 載入 localStorage（保留 GPT 規劃）
+     載入 LocalStorage
   ============================ */
   useEffect(() => {
-    const savedPlan = loadSavedPlan();
+    const savedPlan = loadSavedPlanJSON();
     const savedTickers = loadSavedTickers();
+    const savedIndustry = loadSavedIndustry();
 
-    if (savedPlan) setPlan(savedPlan);
+    if (savedPlan) setPlanSections(savedPlan);
     if (savedTickers.length > 0) setTickers(savedTickers);
+    if (savedIndustry) setIndustryPreference(savedIndustry);
   }, []);
 
   /* ===========================
-     2) 產生投資規劃（呼叫 API）
+     呼叫 API
   ============================ */
   const handleGenerate = async () => {
     setLoading(true);
@@ -159,16 +191,18 @@ export default function PlanningPage() {
           initialAmount,
           addEveryMonth: addEveryMonth === "yes",
           monthlyAmount,
+          industryPreference,
         }),
       });
 
       const data = await res.json();
 
-      setPlan(data.plan || "");
+      setPlanSections(data.plan || {});
       setTickers(data.tickers || []);
 
-      savePlan(data.plan || "");
+      savePlanJSON(data.plan || {});
       saveTickers(data.tickers || []);
+      saveIndustry(industryPreference);
     } catch {
       setErrorMsg("產生規劃時發生錯誤");
     }
@@ -177,13 +211,16 @@ export default function PlanningPage() {
   };
 
   /* ===========================
-     清除規劃
+     清除全部
   ============================ */
   const handleClear = () => {
-    setPlan("");
+    setPlanSections(null);
     setTickers([]);
-    localStorage.removeItem(PLAN_KEY);
+    setIndustryPreference("");
+
+    localStorage.removeItem(PLAN_JSON_KEY);
     localStorage.removeItem(TICKER_KEY);
+    localStorage.removeItem(INDUSTRY_KEY);
   };
 
   /* ===========================
@@ -200,21 +237,62 @@ export default function PlanningPage() {
     savePositions(positions);
   }
 
+  /* ===========================
+     多展開折疊元件
+  ============================ */
+  function Section({
+    id,
+    title,
+    content,
+  }: {
+    id: string;
+    title: string;
+    content?: string;
+  }) {
+    if (!content) return null;
+
+    const isOpen = expanded[id] ?? false;
+
+    return (
+      <div className="border border-neutral-700 rounded overflow-hidden">
+        <button
+          onClick={() =>
+            setExpanded((prev) => ({
+              ...prev,
+              [id]: !isOpen,
+            }))
+          }
+          className="w-full text-left px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-sm font-semibold flex justify-between"
+        >
+          {title}
+          <span className="text-neutral-400 text-xs">{isOpen ? "▲" : "▼"}</span>
+        </button>
+
+        {isOpen && (
+          <div className="p-4 text-sm text-neutral-300 whitespace-pre-wrap">
+            {content}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ===========================
+     主要 UI
+  ============================ */
   return (
     <div className="max-w-6xl mx-auto px-4 space-y-10">
-
       {/* 標題 */}
       <header className="pb-5 border-b border-neutral-800">
         <h1 className="text-3xl font-semibold">投資規劃</h1>
-        <p className="text-neutral-400 mt-1 text-sm">輸入資訊 → 自動產生 GPT 投資規劃</p>
+        <p className="text-neutral-400 mt-1 text-sm">
+          輸入資訊 → 自動產生 GPT 投資規劃
+        </p>
       </header>
 
-      {/* 主內容 */}
       <div className="grid gap-8 lg:grid-cols-[1.2fr,1fr]">
-
         {/* 左側表單 */}
         <section className="tv-card space-y-6">
-
           {/* 投報週期 */}
           <div className="form-field">
             <label className="form-label">投報週期</label>
@@ -228,7 +306,9 @@ export default function PlanningPage() {
               }}
             >
               {HORIZON_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
               ))}
             </select>
             <p className="text-xs text-neutral-500">{horizonDesc}</p>
@@ -237,9 +317,15 @@ export default function PlanningPage() {
           {/* 投報目標 */}
           <div className="form-field">
             <label className="form-label">投報目標</label>
-            <select className="tv-input" value={goal} onChange={(e) => setGoal(e.target.value)}>
+            <select
+              className="tv-input"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+            >
               {goalOptions.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
               ))}
             </select>
           </div>
@@ -247,11 +333,32 @@ export default function PlanningPage() {
           {/* 風險承受度 */}
           <div className="form-field">
             <label className="form-label">風險承受度</label>
-            <select className="tv-input" value={risk} onChange={(e) => setRisk(e.target.value)}>
+            <select
+              className="tv-input"
+              value={risk}
+              onChange={(e) => setRisk(e.target.value)}
+            >
               {RISK_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
               ))}
             </select>
+          </div>
+
+          {/* ⭐ 產業偏好 */}
+          <div className="form-field">
+            <label className="form-label">產業偏好（選填）</label>
+            <input
+              className="tv-input"
+              placeholder="例如：AI、半導體、不要金融、能源為主"
+              value={industryPreference}
+              onChange={(e) => setIndustryPreference(e.target.value)}
+            />
+            <p className="text-neutral-500 text-xs">
+              可輸入偏好（AI / 半導體），或排除（如：不要金融）。<br />
+              若空白，AI 會自動挑選最適合的產業。
+            </p>
           </div>
 
           {/* 初始投資金額 */}
@@ -328,14 +435,14 @@ export default function PlanningPage() {
           )}
         </section>
 
-        {/* 右側 GPT 結果 */}
+        {/* 右側：折疊區塊 */}
         <section className="tv-card space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-sm font-semibold text-neutral-300 uppercase">
-              GPT 投資規劃建議
+              GPT 投資規劃建議（五大區塊）
             </h2>
 
-            {plan && (
+            {planSections && (
               <button
                 onClick={handleClear}
                 className="px-3 py-1 text-xs rounded border border-neutral-500 hover:bg-neutral-800"
@@ -345,13 +452,43 @@ export default function PlanningPage() {
             )}
           </div>
 
-          <div className="tv-input h-[260px] overflow-y-auto p-3 whitespace-pre-wrap text-sm">
-            {plan || <span className="text-neutral-500">尚未產生規劃</span>}
-          </div>
+          {!planSections ? (
+            <div className="tv-input h-[260px] p-3 text-neutral-500 text-sm">
+              尚未產生規劃
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Section
+                id="market_view"
+                title="📌 市場觀點（Market View）"
+                content={planSections.market_view}
+              />
+              <Section
+                id="strategy"
+                title="🎯 核心投資策略（Strategy）"
+                content={planSections.strategy}
+              />
+              <Section
+                id="allocation"
+                title="💰 資金配置邏輯（Allocation）"
+                content={planSections.allocation}
+              />
+              <Section
+                id="entry_exit"
+                title="📈 進出場策略（Entry / Exit）"
+                content={planSections.entry_exit}
+              />
+              <Section
+                id="risk"
+                title="⚠️ 風險提示（Risk）"
+                content={planSections.risk}
+              />
+            </div>
+          )}
         </section>
       </div>
 
-      {/* 建議追蹤標的 */}
+      {/* 建議標的 */}
       {tickers.length > 0 && (
         <section className="tv-card space-y-4">
           <h3 className="text-sm font-semibold text-neutral-300 uppercase">

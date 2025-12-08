@@ -18,6 +18,7 @@ interface PlanBody {
   initialAmount?: string;
   addEveryMonth?: boolean;
   monthlyAmount?: string;
+  industryPreference?: string; // ⭐ 產業偏好
 }
 
 export async function POST(req: Request) {
@@ -43,78 +44,95 @@ export async function POST(req: Request) {
       aggressive: "積極型",
     };
 
+    const industryText = body.industryPreference?.trim()
+      ? body.industryPreference.trim()
+      : "無特別產業偏好，由你挑選最適合使用者投資目標的產業組合";
+
     const userDescription = `
 投資期間：${horizonMap[body.horizon]}
 投報目標：${body.goal}
 風險屬性：${riskMap[body.risk]}
 初始金額：${body.initialAmount ?? "未填寫"} 美元
 是否每月加碼：${
-      body.addEveryMonth ? `是，加碼 ${body.monthlyAmount ?? "未填寫"} 美元` : "否"
+      body.addEveryMonth
+        ? `是，加碼 ${body.monthlyAmount ?? "未填寫"} 美元`
+        : "否"
     }
+產業偏好：${industryText}
 補充說明：${body.note || "無"}
 `.trim();
 
+    /* ----------------------------------------------------
+       ⭐ GPT-4.1 五大區塊版本 Prompt
+       ---------------------------------------------------- */
     const prompt = `
 你是一位專業的美股投資顧問。
 
 ⚠️ 回覆限制：
-- 請務必用「繁體中文」
-- 必須以「純 JSON」輸出，不得包含 \`\`\`json 或任何 code block
-- "plan" 字數須嚴格限制在 700 字以內
-- "tickers" 必須提供 3–6 檔美股標的
-- 只能有 "plan" 與 "tickers" 兩個欄位，不得出現其他欄位
+- 僅能使用「繁體中文」
+- 必須輸出「純 JSON」，不得有 Markdown、註解或額外文字
+- JSON 只能包含 "plan" 與 "tickers" 兩大欄位
+- "plan" 必須包含：
+    • market_view（市場觀點）
+    • strategy（投資核心策略）
+    • allocation（資金配置邏輯）
+    • entry_exit（買賣策略與價格區間）
+    • risk（風險與注意事項）
+- 五大欄位內容總字數建議落在 1500～4000 字之間
+- "tickers" 必須包含 3–6 檔美股，並給 40 字內理由
+- 推薦個股須符合產業偏好（如有 "不要金融" 需排除）
+- 若使用者未填寫產業偏好，你應自行挑選最合理產業
 
-請輸出以下 JSON 結構：
-
+📌 JSON 輸出範例：
 {
-  "plan": "（不超過 700 字的投資規劃說明，務實、無誇大）",
+  "plan": {
+    "market_view": "...",
+    "strategy": "...",
+    "allocation": "...",
+    "entry_exit": "...",
+    "risk": "..."
+  },
   "tickers": [
-    {
-      "symbol": "AAPL",
-      "reason": "簡短理由，不超過 40 字"
-    }
+    { "symbol": "AAPL", "reason": "..." }
   ]
 }
 
-請依照以下使用者條件產生建議：
-
+使用者條件如下：
 ${userDescription}
 
-請務必輸出完全合法的 JSON，不得包含多餘文字、註解、解釋、或 Markdown。
+請只輸出合法 JSON，不得包含其他文字。
 `.trim();
 
+    /* ----------------------------------------------------
+       🔥 GPT-4.1 呼叫
+       ---------------------------------------------------- */
     const completion = await client.responses.create({
-      model: "gpt-4.1-mini",
+      model: "gpt-4.1",   // ⭐⭐⭐ 你已確認使用 4.1
       input: prompt,
     });
 
     const raw =
       (completion as any)?.output?.[0]?.content?.[0]?.text ?? "";
 
-    // 清理可能殘留的 ```json / ``` 等標記
     const cleaned = raw
       .replace(/```json/gi, "")
       .replace(/```/g, "")
       .trim();
 
-    let parsed: { plan?: string; tickers?: any[] };
+    let parsed: any;
 
     try {
       parsed = JSON.parse(cleaned);
     } catch (err) {
-      console.error("JSON parse fail:", cleaned);
-      // 解析失敗時，就把整段文字當作 plan，tickers 留空
+      console.error("JSON parse error:", cleaned);
       return NextResponse.json(
-        {
-          plan: cleaned,
-          tickers: [],
-        },
+        { plan: cleaned, tickers: [] },
         { status: 200 }
       );
     }
 
     return NextResponse.json({
-      plan: parsed.plan || "",
+      plan: parsed.plan || {},
       tickers: Array.isArray(parsed.tickers) ? parsed.tickers : [],
     });
   } catch (err: any) {
