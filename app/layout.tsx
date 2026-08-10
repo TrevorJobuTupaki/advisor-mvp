@@ -1,45 +1,39 @@
-// app/layout.tsx
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "投顧 MVP",
-  description: "美股投資規劃與追蹤 MVP",
-  viewport: "width=device-width, initial-scale=1",
+  title: "SignalDesk｜美股事件與輿情關注平台",
+  description: "整合新聞、官方政策與社群熱度的美股事件情報儀表板。",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#07110f",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="zh-Hant">
-      <body className="app-body">
+      <body>
         <div className="app-shell">
-          <aside className="sidebar">
-            <h1 className="app-title">投顧 MVP</h1>
-
-            <nav className="menu">
-              <Link href="/" className="menu-link">
-                首頁 / 使用說明
-              </Link>
-              <Link href="/pick" className="menu-link">
-                投資規劃
-              </Link>
-              <Link href="/track" className="menu-link">
-                追蹤
-              </Link>
+          <header className="topbar">
+            <Link href="/" className="brand">
+              <span className="brand-mark"><i /><i /><i /></span>
+              <span><b>Signal</b>Desk</span>
+            </Link>
+            <nav>
+              <Link href="/">市場雷達</Link>
+              <Link href="/track">我的關注</Link>
+              <Link href="/pick">分析方法</Link>
             </nav>
-          </aside>
-
-          <main className="main">
-            <div className="latency-note">
-              ⚠️ 本站使用 Finnhub Free API 提供股價資訊，行情皆為
-              <span className="latency-highlight"> 延遲 15 分鐘 </span>
-              ，僅供參考，請勿做為即時交易依據。
+            <div className="market-state">
+              <span /> US Market Intelligence
             </div>
-
-            {children}
-          </main>
+          </header>
+          <main>{children}</main>
         </div>
       </body>
     </html>

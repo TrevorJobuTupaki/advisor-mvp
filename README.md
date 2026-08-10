@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SignalDesk
 
-## Getting Started
+美股事件與輿情關注平台MVP。整合財經新聞、白宮、聯準會、Reddit與選填的X官方帳號資料，產生可追溯的美股關注排行。
 
-First, run the development server:
+## 核心功能
+
+- 美股事件關注排行（不是買賣建議）
+- 正向、風險與多空交錯訊號
+- 原始消息連結與來源狀態
+- 聯準會與白宮官方事件面板
+- 本機瀏覽器關注清單
+- 資料不足時自動切換為明確標示的示範模式
+
+## 環境變數
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+FINNHUB_API_KEY=your_key
+X_BEARER_TOKEN=optional_paid_x_api_token
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`FINNHUB_API_KEY`用於即時新聞、股價及漲跌幅。`X_BEARER_TOKEN`為選填；未設定時，網站仍可使用其他來源，並會將X標示為受限狀態。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 本機執行
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+開啟 <http://localhost:3000>。
 
-To learn more about Next.js, take a look at the following resources:
+## Vercel部署
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+將修改推送至原本連接Vercel的GitHub儲存庫後，Vercel會自動建立新部署。請在Vercel專案的Environment Variables重新確認`FINNHUB_API_KEY`；如果不再使用舊功能，可刪除`OPENAI_API_KEY`。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 免責聲明
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+本站資訊只供研究與產品展示，不構成投資建議、邀約或報酬保證。
